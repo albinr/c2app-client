@@ -3,7 +3,7 @@ import threading
 import platform
 import os
 import uuid
-from tkinter import ttk, messagebox, filedialog, PhotoImage
+from tkinter import ttk, messagebox, filedialog
 import requests
 import subprocess
 
@@ -13,9 +13,6 @@ class ClientApp:
     def __init__(self, root):
         self.root = root
         self.root.title("C2 Client")
-        image = PhotoImage(file="images/blueeye.png")
-        image_label = tk.Label(root, image)
-        image_label.pack()
 
         self.device_name = platform.node()
         self.os_version = f"{platform.system()} {platform.release()}"
