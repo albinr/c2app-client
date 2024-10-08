@@ -1,18 +1,32 @@
 import tkinter as tk
 import threading
 import platform
+import time
 import os
 import uuid
 from tkinter import ttk, messagebox, filedialog
 import requests
 import subprocess
+from PIL import Image, ImageTk
+import pystray
+from pystray import MenuItem as item
 
 SERVER_URL = 'http://localhost:5000'
 
 class ClientApp:
     def __init__(self, root):
         self.root = root
+        self.is_running = True
         self.root.title("C2 Client")
+        self.root.geometry("300x300")
+        icon_img = ImageTk.PhotoImage(file="images/blueeye.ico")
+        self.root.iconphoto(False, icon_img)
+
+        # self.blue_eye = Image.open("images/blueeye.png").resize((64, 64))
+        # self.red_eye = Image.open("images/redeye.png").resize((64, 64))
+
+        self.blue_eye = Image.open("images/blueeye.ico").convert("RGBA")
+        self.red_eye = Image.open("images/redeye.ico").convert("RGBA")
 
         self.device_name = platform.node()
         self.os_version = f"{platform.system()} {platform.release()}"
@@ -20,6 +34,7 @@ class ClientApp:
         self.geo_location = self.get_geolocation()
         self.installed_apps = self.get_installed_apps()
 
+        # Status UI
         self.status_frame = ttk.Frame(root)
         self.status_frame.grid(column=0, row=0, padx=10, pady=5)
 
@@ -33,16 +48,19 @@ class ClientApp:
         self.device_status_indicator = tk.Canvas(self.status_frame, width=20, height=20)
         self.device_status_indicator.grid(column=1, row=1, padx=5)
 
+        # Buttons
         ttk.Button(root, text="Run in background", command=self.minimize_in_background).grid(column=0, row=2, columnspan=2, padx=20, pady=10)
         ttk.Button(root, text="Upload a file", command=self.upload_file).grid(column=0, row=3, columnspan=2, padx=20, pady=10)
         ttk.Button(root, text="Quit", command=root.quit).grid(column=0, row=4, columnspan=2, padx=20, pady=10)
 
-        self.print_all()
+        # self.print_all()
         self.check_server()
         self.add_device()
         self.send_heartbeat()
 
         threading.Thread(target=self.terminal_input_listener, daemon=True).start()
+
+        self.minimize_in_background()
 
     def terminal_input_listener(self):
         while True:
@@ -52,10 +70,34 @@ class ClientApp:
 
     def minimize_in_background(self):
         self.root.withdraw()
-        print("Window is minimized. Type 'show' in the terminal to restore it.")
+        self.create_tray_icon()
 
     def restore_window(self):
         self.root.deiconify()
+        self.icon.stop()
+
+    def create_tray_icon(self):
+        self.icon = pystray.Icon("C2 Client", self.blue_eye, "C2 Client", menu=pystray.Menu(
+            item('Restore', self.restore_window),
+            item('Quit', self.quit_app)
+        ))
+        self.icon.run_detached()
+
+    def update_tray_icon(self, status):
+        if status == "green":
+            self.icon.icon = self.blue_eye
+            print("green")
+        else:
+            self.icon.icon = self.red_eye
+            print("red")
+
+    def quit_app(self, icon, item):
+        self.is_running = False
+
+        if self.icon:
+            self.icon.stop()
+
+        self.root.quit()
 
     def add_device(self):
         try:
@@ -149,39 +191,46 @@ class ClientApp:
 
     def send_heartbeat(self):
         def background_heartbeat():
-            try:
-                response = requests.post(f"{SERVER_URL}/device/heartbeat", json={"hardware_id": self.hardware_id})
-                if response.status_code == 200:
-                    print("Heartbeat sent")
-                    self.root.after(0, lambda: self.update_device_status("green"))
-                else:
-                    print("Failed to send heartbeat")
+            while self.is_running:
+                try:
+                    response = requests.post(f"{SERVER_URL}/device/heartbeat", json={"hardware_id": self.hardware_id})
+                    if response.status_code == 200:
+                        print("Heartbeat sent")
+                        self.root.after(0, lambda: self.update_device_status("green"))
+                    else:
+                        self.root.after(0, lambda: self.update_device_status("red"))
+                except Exception as e:
+                    print(f"Error sending heartbeat: {e}")
                     self.root.after(0, lambda: self.update_device_status("red"))
-            except:
-                print("Server not available")
-                self.root.after(0, lambda: self.update_device_status("red"))
 
-        threading.Thread(target=background_heartbeat).start()
-        self.root.after(30000, self.send_heartbeat)
+                if self.is_running:
+                    time.sleep(60)
+
+        threading.Thread(target=background_heartbeat, daemon=True).start()
 
     def check_server(self):
         def background_check():
-            try:
-                response = requests.get(f"{SERVER_URL}/ping")
-                print("Server pinged")
-                if response.status_code == 200:
-                    self.root.after(0, lambda: self.update_server_status("green"))
-                else:
+            while self.is_running:
+                try:
+                    response = requests.get(f"{SERVER_URL}/ping")
+                    print("Server pinged")
+                    if response.status_code == 200:
+                        self.root.after(0, lambda: self.update_server_status("green"))
+                    else:
+                        self.root.after(0, lambda: self.update_server_status("red"))
+                except Exception as e:
+                    print(f"Failed to reach server: {e}")
                     self.root.after(0, lambda: self.update_server_status("red"))
-            except Exception as e:
-                self.root.after(0, lambda: self.update_server_status("red"))
 
-        threading.Thread(target=background_check).start()
-        self.root.after(60000, self.check_server)
+                if self.is_running:
+                    time.sleep(120)
+
+        threading.Thread(target=background_check, daemon=True).start()
 
     def update_server_status(self, color):
         self.server_status_indicator.delete("all")
         self.server_status_indicator.create_oval(5, 5, 20, 20, fill=color)
+        self.update_tray_icon(color)
 
     def update_device_status(self, color):
         self.device_status_indicator.delete("all")
