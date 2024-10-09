@@ -22,9 +22,6 @@ class ClientApp:
         icon_img = ImageTk.PhotoImage(file="images/blueeye.ico")
         self.root.iconphoto(False, icon_img)
 
-        # self.blue_eye = Image.open("images/blueeye.png").resize((64, 64))
-        # self.red_eye = Image.open("images/redeye.png").resize((64, 64))
-
         self.blue_eye = Image.open("images/blueeye.ico").convert("RGBA")
         self.red_eye = Image.open("images/redeye.ico").convert("RGBA")
 
@@ -60,7 +57,9 @@ class ClientApp:
 
         threading.Thread(target=self.terminal_input_listener, daemon=True).start()
 
-        self.minimize_in_background()
+        # self.minimize_in_background()
+        self.create_tray_icon()
+
 
     def terminal_input_listener(self):
         while True:
@@ -70,9 +69,9 @@ class ClientApp:
 
     def minimize_in_background(self):
         self.root.withdraw()
-        self.create_tray_icon()
+        # self.create_tray_icon()
 
-    def restore_window(self):
+    def restore_window(self, icon=None, item=None):
         self.root.deiconify()
         self.icon.stop()
 
@@ -93,10 +92,8 @@ class ClientApp:
 
     def quit_app(self, icon, item):
         self.is_running = False
-
-        if self.icon:
-            self.icon.stop()
-
+        self.restore_window()
+        self.icon.stop()
         self.root.quit()
 
     def add_device(self):
