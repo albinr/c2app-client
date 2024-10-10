@@ -7,9 +7,20 @@ import uuid
 from tkinter import ttk, messagebox, filedialog
 import requests
 import subprocess
+# import keyboard
 from PIL import Image, ImageTk
-import pystray
-from pystray import MenuItem as item
+
+TRAY_SUPPORTED = False
+
+if platform.system() in ['Windows', 'Darwin', 'Linux']:
+    try:
+        import pystray
+        from pystray import MenuItem as item
+        # from gi.repository import Gtk
+        TRAY_SUPPORTED = True
+    except (ImportError, ValueError):
+        print("Tray icon not supported on this platform. Continuing without tray icon.")
+        TRAY_SUPPORTED = False
 
 SERVER_URL = 'http://localhost:5000'
 
@@ -31,7 +42,9 @@ class ClientApp:
         self.geo_location = self.get_geolocation()
         self.installed_apps = self.get_installed_apps()
 
-        self.create_tray_icon()
+        # Create tray icon only if supported
+        if TRAY_SUPPORTED:
+            self.create_tray_icon()
 
         # Status UI
         self.status_frame = ttk.Frame(root)
@@ -53,47 +66,48 @@ class ClientApp:
         ttk.Button(root, text="Show Device Info", command=self.display_device_info).grid(column=0, row=4, columnspan=2, padx=20, pady=10)
         ttk.Button(root, text="Quit", command=self.quit_app).grid(column=0, row=5, columnspan=2, padx=20, pady=10)
 
-        # self.print_all()
         self.check_server()
         self.add_device()
         self.send_heartbeat()
 
         threading.Thread(target=self.terminal_input_listener, daemon=True).start()
 
-        # self.minimize_in_background()
 
     def terminal_input_listener(self):
         while True:
-            user_input = input("Type 'show' to restore the window: ")
-            if user_input.lower() == "show":
+            user_input = input("Type 'summon' to summon the window")
+            if user_input.lower() == "summon":
                 self.restore_window()
+            elif user_input.lower() == "quit":
+                self.quit_app()
 
     def minimize_in_background(self):
         self.root.withdraw()
 
-    
     def restore_window(self, icon=None, item=None):
-        """Restore the window without stopping the tray icon."""
         self.root.deiconify()
-
 
     def create_tray_icon(self):
         self.icon = pystray.Icon("C2 Client", self.blue_eye, "C2 Client", menu=pystray.Menu(
             item('Open', self.restore_window),
+            item('Show info', self.display_device_info),
             item('Quit', self.quit_app)
         ))
         self.icon.run_detached()
 
     def update_tray_icon(self, status):
-        if status == "green":
-            self.icon.icon = self.blue_eye
-        else:
-            self.icon.icon = self.red_eye
+        if TRAY_SUPPORTED:  
+            if status == "green":
+                self.icon.icon = self.blue_eye
+            else:
+                self.icon.icon = self.red_eye
 
     def quit_app(self, icon=None, item=None):
         self.is_running = False
+        self.hotkey_listener.stop()
         self.restore_window()
-        self.icon.stop()
+        if TRAY_SUPPORTED:
+            self.icon.stop()
         self.root.quit()
 
     def add_device(self):
