@@ -128,6 +128,7 @@ class ClientApp:
         if TRAY_SUPPORTED:
             update_tray_icon(self.tray_icon, color, self.blue_eye, self.red_eye)
 
+
     def update_device_status(self, color):
         """Update device status indicator."""
         self.device_status_indicator.delete("all")
