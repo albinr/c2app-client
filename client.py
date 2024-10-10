@@ -16,7 +16,6 @@ if platform.system() in ['Windows', 'Darwin', 'Linux']:
     try:
         import pystray
         from pystray import MenuItem as item
-        # from gi.repository import Gtk
         TRAY_SUPPORTED = True
     except (ImportError, ValueError):
         print("Tray icon not supported on this platform. Continuing without tray icon.")
@@ -91,6 +90,7 @@ class ClientApp:
         self.icon = pystray.Icon("C2 Client", self.blue_eye, "C2 Client", menu=pystray.Menu(
             item('Open', self.restore_window),
             item('Show info', self.display_device_info),
+            item('Upload file', self.upload_file),
             item('Quit', self.quit_app)
         ))
         self.icon.run_detached()
@@ -104,7 +104,6 @@ class ClientApp:
 
     def quit_app(self, icon=None, item=None):
         self.is_running = False
-        self.hotkey_listener.stop()
         self.restore_window()
         if TRAY_SUPPORTED:
             self.icon.stop()
