@@ -39,7 +39,7 @@ class ClientApp:
 
         # Create tray icon if supported
         if TRAY_SUPPORTED:
-            self.tray_icon = create_tray_icon(self, self.blue_eye, self.red_eye, self.restore_window, 
+            self.tray_icon = create_tray_icon(self.blue_eye, self.restore_window, 
                                             self.display_device_info, self.handle_upload_file, self.quit_app)
         
         # Setup UI components
