@@ -31,6 +31,8 @@ class ClientApp:
         self.geo_location = self.get_geolocation()
         self.installed_apps = self.get_installed_apps()
 
+        self.create_tray_icon()
+
         # Status UI
         self.status_frame = ttk.Frame(root)
         self.status_frame.grid(column=0, row=0, padx=10, pady=5)
@@ -48,7 +50,8 @@ class ClientApp:
         # Buttons
         ttk.Button(root, text="Run in background", command=self.minimize_in_background).grid(column=0, row=2, columnspan=2, padx=20, pady=10)
         ttk.Button(root, text="Upload a file", command=self.upload_file).grid(column=0, row=3, columnspan=2, padx=20, pady=10)
-        ttk.Button(root, text="Quit", command=root.quit).grid(column=0, row=4, columnspan=2, padx=20, pady=10)
+        ttk.Button(root, text="Show Device Info", command=self.display_device_info).grid(column=0, row=4, columnspan=2, padx=20, pady=10)
+        ttk.Button(root, text="Quit", command=self.quit_app).grid(column=0, row=5, columnspan=2, padx=20, pady=10)
 
         # self.print_all()
         self.check_server()
@@ -58,8 +61,6 @@ class ClientApp:
         threading.Thread(target=self.terminal_input_listener, daemon=True).start()
 
         # self.minimize_in_background()
-        self.create_tray_icon()
-
 
     def terminal_input_listener(self):
         while True:
@@ -69,15 +70,16 @@ class ClientApp:
 
     def minimize_in_background(self):
         self.root.withdraw()
-        # self.create_tray_icon()
 
+    
     def restore_window(self, icon=None, item=None):
+        """Restore the window without stopping the tray icon."""
         self.root.deiconify()
-        self.icon.stop()
+
 
     def create_tray_icon(self):
         self.icon = pystray.Icon("C2 Client", self.blue_eye, "C2 Client", menu=pystray.Menu(
-            item('Restore', self.restore_window),
+            item('Open', self.restore_window),
             item('Quit', self.quit_app)
         ))
         self.icon.run_detached()
@@ -85,12 +87,10 @@ class ClientApp:
     def update_tray_icon(self, status):
         if status == "green":
             self.icon.icon = self.blue_eye
-            print("green")
         else:
             self.icon.icon = self.red_eye
-            print("red")
 
-    def quit_app(self, icon, item):
+    def quit_app(self, icon=None, item=None):
         self.is_running = False
         self.restore_window()
         self.icon.stop()
@@ -201,7 +201,7 @@ class ClientApp:
                     self.root.after(0, lambda: self.update_device_status("red"))
 
                 if self.is_running:
-                    time.sleep(60)
+                    time.sleep(30)
 
         threading.Thread(target=background_heartbeat, daemon=True).start()
 
@@ -220,7 +220,7 @@ class ClientApp:
                     self.root.after(0, lambda: self.update_server_status("red"))
 
                 if self.is_running:
-                    time.sleep(120)
+                    time.sleep(60)
 
         threading.Thread(target=background_check, daemon=True).start()
 
@@ -239,7 +239,43 @@ class ClientApp:
         print("Device hardware_id:", self.hardware_id)
         print("Device coordinates:", self.geo_location)
         print("Installed apps:    ", self.installed_apps)
+    
+    def display_device_info(self):
+        """Display all device information if allowed by the server."""
+        can_view = self.check_device_can_view_info()
+        if can_view:
+            info = (
+                f"Device Name: {self.device_name}\n"
+                f"OS Version: {self.os_version}\n"
+                f"Hardware ID: {self.hardware_id}\n"
+                f"Geolocation: {self.geo_location}\n"
+                f"Installed Apps: {', '.join(self.installed_apps)}"
+            )
+            messagebox.showinfo("Device Information", info)
+        else:
+            messagebox.showwarning("Access Denied", "You are not allowed to view device information.")
 
+    def check_device_can_view_info(self):
+        """Check with the server if the device can view its own information."""
+        try:
+            response = requests.post(f"{SERVER_URL}/device/can_view", json={"hardware_id": self.hardware_id}, timeout=5)
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    return result.get('can_view', False)
+                except ValueError:
+                    print("Error: Failed to parse JSON from response.")
+                    messagebox.showerror("Error", "Failed to parse JSON from the server response.")
+                    return False
+            else:
+                print(f"Error: Received status code {response.status_code}")
+                print(f"Response content: {response.text}")
+                messagebox.showerror("Error", f"Failed to check permission with the server. Status code: {response.status_code}")
+                return False
+        except requests.exceptions.RequestException as e:
+            print(f"Error details: {e}")
+            messagebox.showerror("Error", f"Error connecting to the server: {e}")
+            return False
 
 if __name__ == "__main__":
     root = tk.Tk()
