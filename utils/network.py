@@ -42,7 +42,7 @@ def send_heartbeat(hardware_id, update_device_status_callback):
             except Exception as e:
                 print(f"Error sending heartbeat: {e}")
                 update_device_status_callback("red")
-            time.sleep(30)
+            time.sleep(5)
 
     threading.Thread(target=background_heartbeat, daemon=True).start()
 
@@ -60,7 +60,7 @@ def check_server(update_server_status_callback):
             except Exception as e:
                 print(f"Failed to reach server: {e}")
                 update_server_status_callback("red")
-            time.sleep(60)
+            time.sleep(10)
 
     threading.Thread(target=background_check, daemon=True).start()
 
