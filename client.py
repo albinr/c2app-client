@@ -21,7 +21,7 @@ class ClientApp:
         self.root = root
         self.is_running = True
         self.root.title("C2 Client")
-        self.root.geometry("300x300")
+        # self.root.geometry("300x300")
         
         # Load icon images
         icon_img = ImageTk.PhotoImage(file="images/blueeye.ico")
