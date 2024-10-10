@@ -20,3 +20,4 @@ def update_tray_icon(tray_icon, status, blue_eye, red_eye):
         tray_icon.icon = blue_eye
     else:
         tray_icon.icon = red_eye
+    tray_icon.update()

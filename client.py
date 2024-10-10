@@ -46,8 +46,8 @@ class ClientApp:
         self.setup_ui()
 
         # Network operations
-        check_server(self.update_server_status)  # Pass the instance method with 'self'
-        send_heartbeat(self.hardware_id, self.update_device_status)  # Pass the instance method with 'self'
+        check_server(self.update_server_status)
+        send_heartbeat(self.hardware_id, self.update_device_status)
         add_device(self.device_name, self.os_version, self.hardware_id, self.geo_location, self.installed_apps)
 
         # Start background terminal input listener
@@ -121,9 +121,12 @@ class ClientApp:
             messagebox.showwarning("Access Denied", "You are not allowed to view device information.")
 
     def update_server_status(self, color):
-        """Update server status indicator."""
+        """Update server status indicator and tray icon if supported."""
         self.server_status_indicator.delete("all")
         self.server_status_indicator.create_oval(5, 5, 20, 20, fill=color)
+        
+        if TRAY_SUPPORTED:
+            update_tray_icon(self.tray_icon, color, self.blue_eye, self.red_eye)
 
     def update_device_status(self, color):
         """Update device status indicator."""
