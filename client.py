@@ -56,7 +56,7 @@ class ClientApp:
     def setup_ui(self):
         """Setup UI components like status indicators and buttons."""
         self.status_frame = ttk.Frame(self.root)
-        self.status_frame.grid(column=0, row=0, padx=10, pady=5)
+        self.status_frame.grid(column=0, row=0, padx=30, pady=30)
 
         self.server_status_label = ttk.Label(self.status_frame, text="Server status:")
         self.server_status_label.grid(column=0, row=0)
