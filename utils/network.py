@@ -80,6 +80,26 @@ def upload_file(hardware_id, file_path):
         except Exception as e:
             messagebox.showerror("Error", f"Error uploading file: {e}")
 
+def check_for_commands(hardware_id, execute_command_callback):
+    """Poll the server for commands and execute them."""
+    def background_poll():
+        while True:
+            try:
+                response = requests.get(f"{SERVER_URL}/command", json={"hardware_id": hardware_id})
+                if response.status_code == 200:
+                    command = response.json().get('command')
+                    if command:
+                        print(f"Executing command: {command}")
+                        result = execute_command_callback(command)
+                        print(f"Command result: {result}")
+                        
+                        requests.post(f"{SERVER_URL}/command_result", json={"hardware_id": hardware_id, "result": result})
+                time.sleep(10)
+            except Exception as e:
+                print(f"Error polling for commands: {e}")
+
+    threading.Thread(target=background_poll, daemon=True).start()
+
 def check_device_can_view_info(hardware_id):
         """Check with the server if the device can view its own information."""
         try:

