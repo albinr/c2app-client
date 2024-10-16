@@ -4,7 +4,7 @@ import platform
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
 from utils.device_info import load_hardware_id, get_geolocation, get_installed_apps
-from utils.network import send_heartbeat, check_server, add_device, upload_file, check_device_can_view_info, check_for_commands
+from utils.network import send_heartbeat, check_server, add_device, upload_file, check_device_can_view_info, check_for_commands, request_watchlist_rejoin
 
 TRAY_SUPPORTED = False
 
@@ -72,7 +72,8 @@ class ClientApp:
         ttk.Button(self.root, text="Run in background", command=self.minimize_in_background).grid(column=0, row=2, columnspan=2, padx=20, pady=10)
         ttk.Button(self.root, text="Upload a file", command=self.handle_upload_file).grid(column=0, row=3, columnspan=2, padx=20, pady=10)
         ttk.Button(self.root, text="Show Device Info", command=self.display_device_info).grid(column=0, row=4, columnspan=2, padx=20, pady=10)
-        ttk.Button(self.root, text="Quit", command=self.quit_app).grid(column=0, row=5, columnspan=2, padx=20, pady=10)
+        ttk.Button(self.root, text="Request Rejoin Watchlist", command=self.request_watchlist_rejoin).grid(column=0, row=5, columnspan=2, padx=20, pady=10)
+        ttk.Button(self.root, text="Quit", command=self.quit_app).grid(column=0, row=6, columnspan=2, padx=20, pady=10)
 
     def terminal_input_listener(self):
         """Listen for terminal input to control the app."""
@@ -136,6 +137,15 @@ class ClientApp:
         """Execute a command and return the result."""
         result = execute_command(command)
         return result
+
+    def request_watchlist_rejoin(self):
+        """Send request to rejoin the watchlist."""
+        success = request_watchlist_rejoin(self.hardware_id)
+        if success:
+            messagebox.showinfo("Request Sent", "Request to rejoin the watchlist sent successfully.")
+        else:
+            messagebox.showerror("Request Failed", "Failed to send request to rejoin the watchlist.")
+
 
 if __name__ == "__main__":
     root = tk.Tk()

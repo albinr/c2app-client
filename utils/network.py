@@ -38,6 +38,7 @@ def send_heartbeat(hardware_id, update_device_status_callback):
                     print("Heartbeat sent")
                     update_device_status_callback("green")
                 else:
+                    print("Heartbeat denied")
                     update_device_status_callback("red")
             except Exception as e:
                 print(f"Error sending heartbeat: {e}")
@@ -116,3 +117,36 @@ def check_device_can_view_info(hardware_id):
             print(f"Error details: {e}")
             messagebox.showerror("Error", f"Error connecting to the server: {e}")
             return False
+
+# def request_watchlist_rejoin(hardware_id):
+#     try:
+#         response = requests.post(f"{SERVER_URL}/device/rejoin", json={"hardware_id": hardware_id})
+#         if response.status_code == 200:
+#             result = response.json()
+#             if result.get('status') == 'pending':
+#                 print("Request to rejoin the watchlist submitted and is pending approval.")
+#             else:
+#                 print("Request processed successfully.")
+#         elif response.status_code == 404:
+#             print("Device not found on the server.")
+#             messagebox.showwarning("Error", "Device not found.")
+#         else:
+#             print(f"Error: Received status code {response.status_code}")
+#             print(f"Response content: {response.text}")
+#             messagebox.showerror("Error", f"Failed to submit rejoin request. Status code: {response.status_code}")
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error details: {e}")
+#         messagebox.showerror("Error", f"Error connecting to the server: {e}")
+
+def request_watchlist_rejoin(hardware_id):
+    try:
+        response = requests.post(f"{SERVER_URL}/device/rejoin", json={"hardware_id": hardware_id})
+        if response.status_code == 200:
+            return True
+        else:
+            return False
+    except requests.exceptions.RequestException as e:
+        print(f"Error details: {e}")
+        return False
+
+
