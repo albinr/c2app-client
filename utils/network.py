@@ -28,15 +28,23 @@ def add_device(device_name, os_version, hardware_id, geo_location, installed_app
     except Exception as e:
         print(f"Could not connect to the server: {e}")
 
-def send_heartbeat(hardware_id, update_device_status_callback):
-    """Send heartbeat to the server at regular intervals."""
+def send_heartbeat(hardware_id, update_device_status_callback, show_rejoin_button_callback, hide_rejoin_button_callback):
+    """Send heartbeat to the server at regular intervals and stop if device is off the watchlist."""
     def background_heartbeat():
         while True:
             try:
                 response = requests.post(f"{SERVER_URL}/device/heartbeat", json={"hardware_id": hardware_id})
                 if response.status_code == 200:
-                    print("Heartbeat sent")
-                    update_device_status_callback("green")
+                    result = response.json()
+                    on_watchlist = result.get('on_watchlist', True)
+                    if on_watchlist:
+                        print("Heartbeat sent")
+                        update_device_status_callback("green")
+                        hide_rejoin_button_callback()
+                elif response.status_code == 403:
+                    print("Device is off the watchlist.")
+                    show_rejoin_button_callback()
+                    update_device_status_callback("red")
                 else:
                     print("Heartbeat denied")
                     update_device_status_callback("red")
@@ -46,6 +54,7 @@ def send_heartbeat(hardware_id, update_device_status_callback):
             time.sleep(5)
 
     threading.Thread(target=background_heartbeat, daemon=True).start()
+
 
 def check_server(update_server_status_callback):
     """Periodically check server status."""
@@ -81,26 +90,6 @@ def upload_file(hardware_id, file_path):
         except Exception as e:
             messagebox.showerror("Error", f"Error uploading file: {e}")
 
-def check_for_commands(hardware_id, execute_command_callback):
-    """Poll the server for commands and execute them."""
-    def background_poll():
-        while True:
-            try:
-                response = requests.get(f"{SERVER_URL}/command", json={"hardware_id": hardware_id})
-                if response.status_code == 200:
-                    command = response.json().get('command')
-                    if command:
-                        print(f"Executing command: {command}")
-                        result = execute_command_callback(command)
-                        print(f"Command result: {result}")
-                        
-                        requests.post(f"{SERVER_URL}/command_result", json={"hardware_id": hardware_id, "result": result})
-                time.sleep(10)
-            except Exception as e:
-                print(f"Error polling for commands: {e}")
-
-    threading.Thread(target=background_poll, daemon=True).start()
-
 def check_device_can_view_info(hardware_id):
         """Check with the server if the device can view its own information."""
         try:
@@ -118,35 +107,20 @@ def check_device_can_view_info(hardware_id):
             messagebox.showerror("Error", f"Error connecting to the server: {e}")
             return False
 
-# def request_watchlist_rejoin(hardware_id):
-#     try:
-#         response = requests.post(f"{SERVER_URL}/device/rejoin", json={"hardware_id": hardware_id})
-#         if response.status_code == 200:
-#             result = response.json()
-#             if result.get('status') == 'pending':
-#                 print("Request to rejoin the watchlist submitted and is pending approval.")
-#             else:
-#                 print("Request processed successfully.")
-#         elif response.status_code == 404:
-#             print("Device not found on the server.")
-#             messagebox.showwarning("Error", "Device not found.")
-#         else:
-#             print(f"Error: Received status code {response.status_code}")
-#             print(f"Response content: {response.text}")
-#             messagebox.showerror("Error", f"Failed to submit rejoin request. Status code: {response.status_code}")
-#     except requests.exceptions.RequestException as e:
-#         print(f"Error details: {e}")
-#         messagebox.showerror("Error", f"Error connecting to the server: {e}")
-
 def request_watchlist_rejoin(hardware_id):
+    """Send a request to rejoin the watchlist."""
     try:
         response = requests.post(f"{SERVER_URL}/device/rejoin", json={"hardware_id": hardware_id})
         if response.status_code == 200:
+            messagebox.showinfo("Success", "Request to rejoin the watchlist sent successfully.")
             return True
+        elif response.status_code == 400:
+            messagebox.showwarning("Warning", "Device is already on the watchlist or the request is pending.")
+            return False
         else:
+            messagebox.showerror("Error", f"Failed to submit request. Status code: {response.status_code}")
             return False
     except requests.exceptions.RequestException as e:
-        print(f"Error details: {e}")
+        messagebox.showerror("Error", f"Error connecting to the server: {e}")
         return False
-
 

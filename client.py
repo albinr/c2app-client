@@ -4,7 +4,7 @@ import platform
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
 from utils.device_info import load_hardware_id, get_geolocation, get_installed_apps
-from utils.network import send_heartbeat, check_server, add_device, upload_file, check_device_can_view_info, check_for_commands, request_watchlist_rejoin
+from utils.network import send_heartbeat, check_server, add_device, upload_file, check_device_can_view_info, request_watchlist_rejoin
 
 TRAY_SUPPORTED = False
 
@@ -39,16 +39,16 @@ class ClientApp:
         # Create tray icon if supported
         if TRAY_SUPPORTED:
             self.tray_icon = create_tray_icon(self.blue_eye, self.restore_window, 
-                                            self.display_device_info, self.handle_upload_file, self.quit_app)
+            self.display_device_info, self.handle_upload_file, self.quit_app)
         
         # Setup UI components
         self.setup_ui()
 
         # Network operations
         check_server(self.update_server_status)
-        send_heartbeat(self.hardware_id, self.update_device_status)
         add_device(self.device_name, self.os_version, self.hardware_id, self.geo_location, self.installed_apps)
-        check_for_commands(self.hardware_id, self.execute_command)
+        send_heartbeat(self.hardware_id, self.update_device_status, self.show_rejoin_button, self.hide_rejoin_button)
+        # check_for_commands(self.hardware_id, self.execute_command)
 
         # Start background terminal input listener
         threading.Thread(target=self.terminal_input_listener, daemon=True).start()
@@ -72,7 +72,7 @@ class ClientApp:
         ttk.Button(self.root, text="Run in background", command=self.minimize_in_background).grid(column=0, row=2, columnspan=2, padx=20, pady=10)
         ttk.Button(self.root, text="Upload a file", command=self.handle_upload_file).grid(column=0, row=3, columnspan=2, padx=20, pady=10)
         ttk.Button(self.root, text="Show Device Info", command=self.display_device_info).grid(column=0, row=4, columnspan=2, padx=20, pady=10)
-        ttk.Button(self.root, text="Request Rejoin Watchlist", command=self.request_watchlist_rejoin).grid(column=0, row=5, columnspan=2, padx=20, pady=10)
+        # ttk.Button(self.root, text="Request Rejoin Watchlist", command=self.request_watchlist_rejoin).grid(column=0, row=5, columnspan=2, padx=20, pady=10)
         ttk.Button(self.root, text="Quit", command=self.quit_app).grid(column=0, row=6, columnspan=2, padx=20, pady=10)
 
     def terminal_input_listener(self):
@@ -128,15 +128,25 @@ class ClientApp:
         if TRAY_SUPPORTED:
             update_tray_icon(self.tray_icon, color, self.blue_eye, self.red_eye)
 
+    def show_rejoin_button(self):
+        """Display the button to request rejoining the watchlist."""
+        self.rejoin_button = ttk.Button(self.root, text="Request Rejoin Watchlist", command=self.request_watchlist_rejoin)
+        self.rejoin_button.grid(column=0, row=5, columnspan=2, padx=20, pady=10)
+
     def update_device_status(self, color):
         """Update device status indicator."""
         self.device_status_indicator.delete("all")
         self.device_status_indicator.create_oval(5, 5, 20, 20, fill=color)
 
-    def execute_command(self, command):
-        """Execute a command and return the result."""
-        result = execute_command(command)
-        return result
+    def hide_rejoin_button(self):
+        """Hide the button to request rejoining the watchlist."""
+        if hasattr(self, 'rejoin_button'):
+            self.rejoin_button.grid_remove()
+
+    # def execute_command(self, command):
+    #     """Execute a command and return the result."""
+    #     result = execute_command(command)
+    #     return result
 
     def request_watchlist_rejoin(self):
         """Send request to rejoin the watchlist."""
