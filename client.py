@@ -70,9 +70,8 @@ class ClientApp:
 
         # Buttons for user actions
         ttk.Button(self.root, text="Run in background", command=self.minimize_in_background).grid(column=0, row=2, columnspan=2, padx=20, pady=10)
-        ttk.Button(self.root, text="Upload a file", command=self.handle_upload_file).grid(column=0, row=3, columnspan=2, padx=20, pady=10)
+        # ttk.Button(self.root, text="Upload a file", command=self.handle_upload_file).grid(column=0, row=3, columnspan=2, padx=20, pady=10)
         ttk.Button(self.root, text="Show Device Info", command=self.display_device_info).grid(column=0, row=4, columnspan=2, padx=20, pady=10)
-        # ttk.Button(self.root, text="Request Rejoin Watchlist", command=self.request_watchlist_rejoin).grid(column=0, row=5, columnspan=2, padx=20, pady=10)
         ttk.Button(self.root, text="Quit", command=self.quit_app).grid(column=0, row=6, columnspan=2, padx=20, pady=10)
 
     def terminal_input_listener(self):
