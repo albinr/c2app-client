@@ -37,10 +37,13 @@ def send_heartbeat(hardware_id, update_device_status_callback, show_rejoin_butto
                 if response.status_code == 200:
                     result = response.json()
                     on_watchlist = result.get('on_watchlist', True)
+                    terminal_open = result.get('terminal_open', False)
                     if on_watchlist:
                         print("Heartbeat sent")
                         update_device_status_callback("green")
                         hide_rejoin_button_callback()
+                    if terminal_open:
+                        print("terminal is open")
                 elif response.status_code == 403:
                     print("Device is off the watchlist.")
                     show_rejoin_button_callback()
@@ -51,10 +54,9 @@ def send_heartbeat(hardware_id, update_device_status_callback, show_rejoin_butto
             except Exception as e:
                 print(f"Error sending heartbeat: {e}")
                 update_device_status_callback("red")
-            time.sleep(5)
+            time.sleep(50)
 
     threading.Thread(target=background_heartbeat, daemon=True).start()
-
 
 def check_server(update_server_status_callback):
     """Periodically check server status."""
@@ -70,7 +72,7 @@ def check_server(update_server_status_callback):
             except Exception as e:
                 print(f"Failed to reach server: {e}")
                 update_server_status_callback("red")
-            time.sleep(10)
+            time.sleep(110)
 
     threading.Thread(target=background_check, daemon=True).start()
 
