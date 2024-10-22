@@ -5,43 +5,59 @@ import asyncio
 import json
 import subprocess
 
-async def connect_websocket(hardware_id):
-    websocket_url = f"ws://localhost:5000/ws/device/{hardware_id}"
-    async with websockets.connect(websocket_url) as websocket:
-        print(f"Connected to WebSocket as {hardware_id}.")
-        try:
+
+async def websocket_listener(websocket_uri, hardware_id):
+    try:
+        async with websockets.connect(websocket_uri) as websocket:
+            print("WebSocket connection established.")
+            await websocket.send(json.dumps({
+                "type": "command_result",
+                "hardware_id": hardware_id,
+                "result": "> Client Ready"
+            }))
             while True:
-                # Wait for a message from the server
-                message = await websocket.recv()
                 try:
+                    message = await websocket.recv()
                     data = json.loads(message)
                     if data.get("type") == "command":
                         command = data.get("command")
-                        print(f"Executing command: {command}")
-                        # Execute the command
                         result = execute_command(command)
-                        # Send the result back to the server
-                        response = {
+                        await websocket.send(json.dumps({
                             "type": "command_result",
+                            "hardware_id": hardware_id,
                             "result": result
-                        }
-                        await websocket.send(json.dumps(response))
-                except json.JSONDecodeError:
-                    print("Invalid message format received")
-        except websockets.ConnectionClosedError as e:
-            print(f"WebSocket connection closed: {e}")
-        except Exception as e:
-            print(f"WebSocket error: {e}")
+                        }))
+                    elif data.get("type") == "disconnect":
+                        print("Server requested disconnect. Closing connection.")
+                        return  # Exit the listener to allow controlled stop
+                    else:
+                        print(f"Unknown message type received: {data}")
+
+                except websockets.ConnectionClosedError:
+                    print("WebSocket connection closed by the server.")
+                    return  # Exit the listener to allow reconnection
+                except Exception as e:
+                    print(f"Error receiving message: {e}")
+                    return  # Exit to ensure safe reconnection or stop
+
+    except websockets.ConnectionClosedError as e:
+        print(f"WebSocket connection closed: {e}. Reconnecting in 5 seconds...")
+        await asyncio.sleep(5)
+    except Exception as e:
+        print(f"Error in WebSocket listener: {e}. Reconnecting in 5 seconds...")
+        await asyncio.sleep(5)
+
 
 def execute_command(command):
-    """Execute a system command and return the output or error."""
+    """Execute the received command and return the output."""
     try:
         result = subprocess.run(
-            command, 
+            command,
             shell=True, 
             capture_output=True, 
             text=True, 
-            timeout=30
+            timeout=10,
+            cwd="/"
         )
         if result.returncode == 0:
             return result.stdout.strip()
@@ -51,8 +67,3 @@ def execute_command(command):
         return "Error: Command timed out"
     except Exception as e:
         return f"Error: {str(e)}"
-
-# Example usage:
-if __name__ == "__main__":
-    hardware_id = "your_hardware_id_here"  # Replace with actual hardware ID
-    asyncio.run(connect_websocket(hardware_id))
