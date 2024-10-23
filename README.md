@@ -15,10 +15,13 @@ The client uses a multi-threaded architecture combined with asynchronous WebSock
 
 Before running the application, ensure the following dependencies are installed:
 
-Python 3.10 or above is required.
-Dependencies: Install them using pip:
+- Python 3.10 or above is required.
+- Dependencies: Install them using pip:
 
+```console
 pip install -r requirements.txt
+```
+
 Ensure you have Tkinter installed, as it is required for the GUI. You might need to install it separately depending on your OS.
 
 ## Build
@@ -29,9 +32,9 @@ The client application does not require a separate build step. Make sure the dep
 
 Unit and integration tests can be run using pytest. Make sure all dependencies are installed, and then execute:
 
-
+```console
 pytest
-
+```
 This will run all available tests and provide a summary of any issues.
 
 ## Run
@@ -41,7 +44,10 @@ To run the client application:
 Make sure the server is running and accessible.
 Execute the following command:
 
+```console
 python client.py
+```
+
 The application will start, connect to the server, and the GUI will appear for interaction.
 
 ## License
