@@ -28,8 +28,10 @@ class ClientApp:
         # Load icon images
         icon_img = ImageTk.PhotoImage(file="images/blueeye.ico")
         self.root.iconphoto(False, icon_img)
-        self.blue_eye = Image.open("images/blueeye.ico").convert("RGBA")
-        self.red_eye = Image.open("images/redeye.ico").convert("RGBA")
+        with Image.open("images/blueeye.ico") as img:
+            self.blue_eye = img.convert("RGBA")
+        with Image.open("images/redeye.ico") as img:
+            self.red_eye = img.convert("RGBA")
         
         # Device information
         self.device_name = platform.node()
@@ -72,7 +74,6 @@ class ClientApp:
             self.stop_websocket_listener
         )
 
-        # Start background terminal input listener
         threading.Thread(target=self.terminal_input_listener, daemon=True).start()
 
     def run_event_loop(self):

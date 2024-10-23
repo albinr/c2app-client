@@ -20,16 +20,19 @@ def add_device(device_name, os_version, hardware_id, geo_location, installed_app
         response = requests.post(f"{SERVER_URL}/device", json=data)
 
         if response.status_code == 201:
-            print("Device added!")
+            # print("Device added!")
+            pass
 
         elif response.status_code == 400 and 'already exists' in response.text:
-            print("Device already exists.")
+            # print("Device already exists.")
+            pass
 
         else:
             raise Exception(f"Failed to add device: {response.text}")
 
     except Exception as e:
-        print(f"Could not connect to the server: {e}")
+        # print(f"Could not connect to the server: {e}")
+        pass
 
 def send_heartbeat(hardware_id, update_device_status_callback, show_rejoin_button_callback, 
     hide_rejoin_button_callback, start_websocket_listener_callback, stop_websocket_listener_callback):
@@ -45,7 +48,7 @@ def send_heartbeat(hardware_id, update_device_status_callback, show_rejoin_butto
                     open_socket = result.get('open_socket', False)
 
                     if on_watchlist:
-                        print("Heartbeat sent")
+                        # print("Heartbeat sent")
                         update_device_status_callback("green")
                         hide_rejoin_button_callback()
 
@@ -55,19 +58,19 @@ def send_heartbeat(hardware_id, update_device_status_callback, show_rejoin_butto
                             stop_websocket_listener_callback()
 
                     else:
-                        print("Device is off the watchlist.")
+                        # print("Device is off the watchlist.")
                         update_device_status_callback("red")
                         show_rejoin_button_callback()
                         stop_websocket_listener_callback()
 
                 else:
-                    print("Heartbeat denied")
+                    # print("Heartbeat denied")
                     update_device_status_callback("red")
                     show_rejoin_button_callback()
                     stop_websocket_listener_callback()
 
             except Exception as e:
-                print(f"Error sending heartbeat: {e}")
+                # print(f"Error sending heartbeat: {e}")
                 update_device_status_callback("red")
                 stop_websocket_listener_callback()
 
@@ -81,7 +84,7 @@ def check_server(update_server_status_callback):
         while True:
             try:
                 response = requests.get(f"{SERVER_URL}/ping")
-                print("Server pinged")
+                # print("Server pinged")
                 if response.status_code == 200:
                     update_server_status_callback("green")
 
@@ -89,7 +92,7 @@ def check_server(update_server_status_callback):
                     update_server_status_callback("red")
 
             except Exception as e:
-                print(f"Failed to ping server: {e}")
+                # print(f"Failed to ping server: {e}")
                 update_server_status_callback("red")
 
             time.sleep(20)
@@ -122,13 +125,13 @@ def check_device_can_view_info(hardware_id):
                 result = response.json()
                 return result.get('can_view', False)
             else:
-                print(f"Error: Received status code {response.status_code}")
-                print(f"Response content: {response.text}")
+                # print(f"Error: Received status code {response.status_code}")
+                # print(f"Response content: {response.text}")
                 messagebox.showerror("Error", f"Failed to check permission with the server. Status code: {response.status_code}")
                 return False
 
         except requests.exceptions.RequestException as e:
-            print(f"Error details: {e}")
+            # print(f"Error details: {e}")
             messagebox.showerror("Error", f"Error connecting to the server: {e}")
             return False
 
