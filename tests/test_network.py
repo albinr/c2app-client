@@ -33,7 +33,6 @@ class TestNetwork(unittest.TestCase):
         update_server_status_callback = MagicMock()
         check_server(update_server_status_callback)
         
-        # Allow some time for the thread to execute
         time.sleep(0.1)
 
         mock_get.assert_called_once_with(f"{SERVER_URL}/ping")
@@ -45,7 +44,6 @@ class TestNetwork(unittest.TestCase):
         update_server_status_callback = MagicMock()
         check_server(update_server_status_callback)
         
-        # Allow some time for the thread to execute
         time.sleep(0.1)
 
         update_server_status_callback.assert_called_with("red")
@@ -103,7 +101,6 @@ class TestNetwork(unittest.TestCase):
             stop_websocket_listener_callback
         )
         
-        # Simulate sending a heartbeat
         mock_post.assert_called_with(f"{SERVER_URL}/device/heartbeat", json={"hardware_id": "12345"})
         update_device_status_callback.assert_called_with("green")
         hide_rejoin_button_callback.assert_called_once()
