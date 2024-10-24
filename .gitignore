@@ -1,0 +1,12 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+hardware_id.txt
+
+# Virtual environment
+venv/
+
+# IDE and editor files
+.vscode/
+.idea/

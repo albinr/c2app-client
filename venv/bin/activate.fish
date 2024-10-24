@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/albinr/git/bth/c2app/client/venv"
+set -gx VIRTUAL_ENV "/home/albinr/git/bth/c2app-proj/c2app-client/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

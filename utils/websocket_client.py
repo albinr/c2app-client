@@ -16,14 +16,14 @@ async def websocket_listener(websocket_uri, hardware_id):
                 except websockets.ConnectionClosedError:
                     return
                 except Exception as e:
-                    print(f"Error receiving message: {e}")
+                    # print(f"Error receiving message: {e}")
                     return
 
     except websockets.ConnectionClosedError as e:
-        print(f"WebSocket connection closed: {e}. Reconnecting in 5 seconds...")
+        # print(f"WebSocket connection closed: {e}. Reconnecting in 5 seconds...")
         await asyncio.sleep(5)
     except Exception as e:
-        print(f"Error in WebSocket listener: {e}. Reconnecting in 5 seconds...")
+        # print(f"Error in WebSocket listener: {e}. Reconnecting in 5 seconds...")
         await asyncio.sleep(5)
 
 async def send_client_ready_message(websocket, hardware_id):
@@ -46,7 +46,7 @@ async def process_message(websocket, message, hardware_id):
             "result": result
         }))
     elif data.get("type") == "disconnect":
-        print("Server requested disconnect. Closing connection.")
+        # print("Server requested disconnect. Closing connection.")
         return
     else:
         print(f"Unknown message type received: {data}")

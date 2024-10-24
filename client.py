@@ -10,14 +10,19 @@ from utils.websocket_client import websocket_listener
 
 TRAY_SUPPORTED = False
 
-if platform.system() in ['Windows', 'Darwin', 'Linux']:
+def is_wsl():
+    """Check if the environment is WSL."""
+    return 'microsoft' in platform.uname().release.lower()
+
+if platform.system() in ['Windows', 'Darwin', 'Linux'] and not is_wsl():
     try:
         from components.tray import create_tray_icon, update_tray_icon
         TRAY_SUPPORTED = True
     except (ImportError, ValueError):
         print("Tray icon not supported on this platform. Continuing without tray icon.")
         TRAY_SUPPORTED = False
-
+else:
+    print("Tray icon not supported on this platform or environment (WSL detected). Continuing without tray icon.")
 class ClientApp:
     def __init__(self, root):
         self.root = root
@@ -186,7 +191,8 @@ class ClientApp:
         try:
             await websocket_listener(self.websocket_uri, self.hardware_id)
         except asyncio.CancelledError:
-            print("WebSocket listener canceled.")
+            # print("WebSocket listener canceled.")
+            pass
         finally:
             self.websocket_task = None
 
