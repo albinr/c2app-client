@@ -140,7 +140,7 @@ def request_watchlist_rejoin(hardware_id):
     try:
         response = requests.post(f"{SERVER_URL}/device/rejoin", json={"hardware_id": hardware_id})
         if response.status_code == 200:
-            messagebox.showinfo("Success", "Request to rejoin the watchlist sent successfully.")
+            # messagebox.showinfo("Success", "Request to rejoin the watchlist sent successfully.")
             return True
         elif response.status_code == 400:
             messagebox.showwarning("Warning", "Device is already on the watchlist or the request is pending.")

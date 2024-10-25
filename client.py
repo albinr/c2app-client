@@ -104,6 +104,9 @@ class ClientApp:
         ttk.Button(self.root, text="Run in background", command=self.minimize_in_background).grid(column=0, row=2, columnspan=2, padx=20, pady=10)
         ttk.Button(self.root, text="Show Device Info", command=self.display_device_info).grid(column=0, row=4, columnspan=2, padx=20, pady=10)
         ttk.Button(self.root, text="Quit", command=self.quit_app).grid(column=0, row=6, columnspan=2, padx=20, pady=10)
+        self.rejoin_button = ttk.Button(self.root, text="Request Rejoin Watchlist", command=self.request_watchlist_rejoin)
+        self.rejoin_button.grid(column=0, row=5, columnspan=2, padx=20, pady=10)
+        self.hide_rejoin_button() 
 
     def terminal_input_listener(self):
         """Listen for terminal input to control the app."""
@@ -160,18 +163,16 @@ class ClientApp:
 
     def show_rejoin_button(self):
         """Display the button to request rejoining the watchlist."""
-        self.rejoin_button = ttk.Button(self.root, text="Request Rejoin Watchlist", command=self.request_watchlist_rejoin)
-        self.rejoin_button.grid(column=0, row=5, columnspan=2, padx=20, pady=10)
+        self.rejoin_button.grid()
+
+    def hide_rejoin_button(self):
+        """Hide the button to request rejoining the watchlist."""
+        self.rejoin_button.grid_remove()
 
     def update_device_status(self, color):
         """Update device status indicator."""
         self.device_status_indicator.delete("all")
         self.device_status_indicator.create_oval(5, 5, 20, 20, fill=color)
-
-    def hide_rejoin_button(self):
-        """Hide the button to request rejoining the watchlist."""
-        if hasattr(self, 'rejoin_button'):
-            self.rejoin_button.grid_remove()
 
     def request_watchlist_rejoin(self):
         """Send request to rejoin the watchlist."""
