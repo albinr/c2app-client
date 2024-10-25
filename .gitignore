@@ -4,8 +4,6 @@ __pycache__/
 
 hardware_id.txt
 
-# Virtual environment
-venv/
 
 # IDE and editor files
 .vscode/
