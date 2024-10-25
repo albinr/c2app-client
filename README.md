@@ -46,7 +46,7 @@ This will discover and run all available tests and provide a summary of any issu
 
 ## Run
 To run the client application:
-1. Use a window environment like command prompt or powershell. WSL will work but you do not hav access to the tray.
+1. Use a window environment like command prompt or powershell. WSL will work but you do not have access to the system tray.
 2. Make sure the server is running and accessible.
 3. Execute the following command:
 
