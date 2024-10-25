@@ -30,7 +30,7 @@ The client application does not require a separate build step. Make sure the dep
 Unit tests can be run using the built-in unittest module. Make sure all dependencies are installed, and then execute:
 
 ```bash
-python -m unittest discover -s tests
+python3 -m unittest discover -s tests
 ```
 This will discover and run all available tests and provide a summary of any issues.
 
