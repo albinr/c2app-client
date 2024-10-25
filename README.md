@@ -33,9 +33,6 @@ pip install -r requirements.txt
 
 Ensure you have Tkinter installed, as it is required for the GUI. You might need to install it separately depending on your OS.
 
-## Build
-The client application does not require a separate build step. Make sure the dependencies are installed, and you have the necessary environment variables set up if required.
-
 ## Test
 Unit tests can be run using the built-in unittest module. Make sure all dependencies are installed, and then execute:
 
