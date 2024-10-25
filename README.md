@@ -15,7 +15,17 @@ Below is a screenshot of the application GUI:
 Before running the application, ensure the following dependencies are installed:
 
 - Python 3.10 or above is required.
-- Dependencies: Install them using pip:
+- Dependencies: Install them using pip
+
+Install dependencies with:
+
+```bash
+python3 -m venv venv
+```
+
+```bash
+source venv/bin/activate
+```
 
 ```bash
 pip install -r requirements.txt
