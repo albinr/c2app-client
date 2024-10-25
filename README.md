@@ -1,4 +1,6 @@
-# C2 Security Application Client ![Logo](images/blueeye.ico)
+![Logo](images/blueeye.ico)
+
+# C2 Security Application Client 
 
 ## Introduction
 The C2 Security Application Client is a part of a command and control (C2) infrastructure designed to monitor and interact with endpoint devices securely. This client application communicates with the server to receive commands, send device information, and manage watchlist statuses, ensuring devices remain compliant with the monitoring system. It features a graphical user interface (GUI) for user interaction and supports WebSocket communication for real-time command execution.
