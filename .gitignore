@@ -1,7 +1,4 @@
-# Python cache files
 __pycache__/
 *.py[cod]
-
 hardware_id.txt
-
 venv/
