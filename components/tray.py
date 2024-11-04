@@ -8,7 +8,7 @@ def create_tray_icon(blue_eye, restore_window, display_device_info, upload_file,
     tray_icon = pystray.Icon("C2 Client", blue_eye, "C2 Client", menu=pystray.Menu(
         item('Open', restore_window),
         item('Show info', display_device_info),
-        item('Upload file', upload_file),
+        # item('Upload file', upload_file),
         item('Quit', quit_app)
     ))
     tray_icon.run_detached()
